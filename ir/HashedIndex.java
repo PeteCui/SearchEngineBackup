@@ -30,8 +30,7 @@ public class HashedIndex implements Index {
         // YOUR CODE HERE
         //
         //if the hashmap doesn't contain the token
-        PostingsList currPostings = this.getPostings(token);
-        if(currPostings == null){
+        if(!index.containsKey(token)){
             //new PostingList
             PostingsList newPostingList = new PostingsList();
             //add new PostingEntry into this PostingsList
@@ -39,7 +38,8 @@ public class HashedIndex implements Index {
             //update the hashmap
             index.put(token, newPostingList);
         }else{
-        //if the hashmap contain the token
+            //if the hashmap contain the token
+            PostingsList currPostings = index.get(token);
             //if the last docID does not match current docID
             if (currPostings.get(currPostings.size()-1).docID != docID){
                 //add new PostingEntry into current PostingsList

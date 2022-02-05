@@ -14,6 +14,7 @@ public class PostingsList {
     /** The postings list */
     private ArrayList<PostingsEntry> list = new ArrayList<PostingsEntry>();
 
+    public String term;
 
     /** Number of postings in this list. */
     public int size() {
@@ -26,7 +27,6 @@ public class PostingsList {
 
         return list.get( i );
     }
-
     //
     //  YOUR CODE HERE
     //
@@ -34,6 +34,7 @@ public class PostingsList {
     public void addEntry(int docID){
 
         this.list.add(new PostingsEntry(docID));
+
     }
 
     public void addEntry(int docID, int offset){
@@ -42,14 +43,25 @@ public class PostingsList {
     }
 
     public void addEntry(PostingsEntry entry){
+
         this.list.add(entry);
     }
 
     /** update the offset in current entry*/
     public void updateOffset(int index, int offset) {
 
-        this.list.get(index).hashset.add(offset);
+        this.list.get(index).positions.add(offset);
     }
 
+    @Override
+    public String toString() {
+        //return the String format wrote into data file
+        String thisPostingsList = "";
+        //System.out.println("1.1.1");
+        for (PostingsEntry entry : list){
+            thisPostingsList += entry.toString();
+        }
+        return thisPostingsList;
+    }
 }
 

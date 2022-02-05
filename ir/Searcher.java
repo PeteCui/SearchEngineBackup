@@ -7,6 +7,7 @@
 
 package ir;
 
+import java.util.ArrayList;
 import java.util.Set;
 
 /**
@@ -58,6 +59,8 @@ public class Searcher {
         int termNum = query.size();
         System.out.println("term num: " + termNum);
         if (termNum <= 1) {
+            //test PostingsList.toString
+            //System.out.println(index.getPostings(query.queryterm.get(0).term).toString());
             return index.getPostings(query.queryterm.get(0).term);
         } else {
             //creat an array to store all the returned postingsList result
@@ -127,8 +130,8 @@ public class Searcher {
         while(i < list1.size() && j < list2.size()){
             if (list1.get(i).docID == list2.get(j).docID){
                 int currDocID = list1.get(i).docID;
-                Set<Integer> positions1 = list1.get(i).hashset;
-                Set<Integer> positions2 = list2.get(j).hashset;
+                ArrayList<Integer> positions1 = list1.get(i).positions;
+                ArrayList<Integer> positions2 = list2.get(j).positions;
 
                 //some test output
 //                System.out.println(list1.get(i).docID + "p1 position");
@@ -143,6 +146,7 @@ public class Searcher {
                 //from back to check the front
                 for (int p2: positions2){
                     //System.out.println("check if there is: " + (p2 - offset) + " in p1");
+
                     if(positions1.contains(p2 - offset)){
                         System.out.println(p2 - offset + "in the p1");
                         //if resultList is null
