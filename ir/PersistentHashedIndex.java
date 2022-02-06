@@ -58,6 +58,7 @@ public class PersistentHashedIndex implements Index {
     /** The cache as a main-memory hash map. */
     HashMap<String,PostingsList> index = new HashMap<String,PostingsList>();
 
+    /** my debug parameter. */
     int dictionaryEntryCountTest = 0;
     // ===================================================================
 
@@ -151,7 +152,7 @@ public class PersistentHashedIndex implements Index {
         //
         //  YOUR CODE HERE
         //
-        System.out.println("writeEntry");
+        //System.out.println("writeEntry");
         try {
             dictionaryFile.seek(ptr);
             //write ptr into dictionary with Long data type
@@ -166,7 +167,7 @@ public class PersistentHashedIndex implements Index {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        System.out.println("endEntry");
+        //System.out.println("endEntry");
     }
 
     /**
