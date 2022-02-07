@@ -12,7 +12,7 @@ import java.util.ArrayList;
 public class PostingsList {
     
     /** The postings list */
-    private ArrayList<PostingsEntry> list = new ArrayList<PostingsEntry>();
+    public ArrayList<PostingsEntry> list = new ArrayList<PostingsEntry>();
 
     public String term;
 
@@ -62,6 +62,31 @@ public class PostingsList {
             thisPostingsList += entry.toString();
         }
         return thisPostingsList;
+    }
+
+    private PostingsEntry addAndMerge(PostingsEntry entry) {
+        int start = 0;
+        int end = this.list.size()-1;
+        int i;
+        while(end >= start) {
+            i = (start + end)/2;
+            if(this.list.get(i).docID == entry.docID) {
+                this.list.get(i).merge(entry);
+                return this.list.get(i);
+            } else if(entry.docID > this.list.get(i).docID) {
+                start = i+1;
+            } else {
+                end = i-1;
+            }
+        }
+        this.list.add(start, entry);
+        return entry;
+    }
+
+    public void sortMerge(PostingsList list2) {
+        for(int i=0;i<list2.list.size();++i) {
+            this.addAndMerge(new PostingsEntry(list2.list.get(i)));
+        }
     }
 }
 

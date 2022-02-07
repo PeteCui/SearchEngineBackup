@@ -271,7 +271,7 @@ public class PersistentHashedIndex implements Index {
                 if (currEntry == null){
                     //5.1 write the free ptr and data length into dictionary file
                     //System.out.println(entry.getKey());
-                    System.out.println("1 new entry:" + i + "Key :"+ entry.getKey());
+                    //System.out.println("1 new entry:" + i + "Key :"+ entry.getKey());
                     writeEntry(termEntry, entryPtr);
                 }else if(currEntry.ptr == 0L || currEntry.length == 0){
                     //5.2 no entry at here
@@ -283,7 +283,7 @@ public class PersistentHashedIndex implements Index {
                     boolean flag = true;
                     //5.3 loop until null and write the free ptr and data length into dictionary file
                     while (flag){
-                        System.out.println("3 new entry:" + i + "Key :"+ entry.getKey());
+                        //System.out.println("3 new entry:" + i + "Key :"+ entry.getKey());
                         //update collisions
                         collisions++;
                         //update entryPtr
@@ -376,8 +376,8 @@ public class PersistentHashedIndex implements Index {
         //System.out.println("input:" + postingsListString);
         PostingsList newPostingList = new PostingsList();
         String[] stringArray = postingsListString.split(" ");
-        System.out.println("term: " + stringArray[0]);
-        System.out.println("postingsList: " + stringArray[1]);
+        //System.out.println("term: " + stringArray[0]);
+        //System.out.println("postingsList: " + stringArray[1]);
         newPostingList.term = stringArray[0];
         String[] postingsArray = stringArray[1].split(";");
         for (String entryStr : postingsArray){

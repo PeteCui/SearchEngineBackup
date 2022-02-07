@@ -83,6 +83,7 @@ public class Engine {
                 }
                 long elapsedTime = System.currentTimeMillis() - startTime;
                 gui.displayInfoText( String.format( "Indexing done in %.1f seconds.", elapsedTime/1000.0 ));
+                //final cleanup!
                 index.cleanup();
             }
         } else {

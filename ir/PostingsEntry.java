@@ -17,6 +17,12 @@ public class PostingsEntry implements Comparable<PostingsEntry>, Serializable {
     //public Set<Integer> hashset = new HashSet<>();
     public ArrayList<Integer> positions = new ArrayList<>();
 
+    public PostingsEntry(PostingsEntry entry) {
+        this.docID = entry.docID;
+        this.score = entry.score;
+        this.positions = new ArrayList<Integer>(entry.positions);
+    }
+
     /**
      *  PostingsEntries are compared by their score (only relevant
      *  in ranked retrieval).
@@ -68,6 +74,31 @@ public class PostingsEntry implements Comparable<PostingsEntry>, Serializable {
         }
         thisSet = thisSet + ";";
         return thisSet;
+    }
+
+    public void merge(PostingsEntry entry) {
+        if(this.docID == entry.docID) {
+            for(int i=0;i<entry.positions.size();++i) {
+                this.insertPosition(entry.positions.get(i));
+            }
+        }
+    }
+
+    private void insertPosition(int position) {
+        int start = 0;
+        int end = this.positions.size() - 1;
+        int i;
+        while(end >= start){
+            i = (start + end)/2;
+            if(this.positions.get(i) == position) {
+                return;
+            } else if(position > this.positions.get(i)) {
+                start = i+1;
+            } else {
+                end = i-1;
+            }
+        }
+        this.positions.add(start,position);
     }
 }
 
