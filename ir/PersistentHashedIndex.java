@@ -42,6 +42,7 @@ public class PersistentHashedIndex implements Index {
 
     /** The dictionary hash table on disk can fit this many entries. */
     public static final long TABLESIZE = 611953L;
+    //public static final long TABLESIZE = 3500000L;
 
     /** The dictionary entry byte on disk. */
     public static final int ENTRYSIZE = 24;
@@ -187,7 +188,7 @@ public class PersistentHashedIndex implements Index {
             int dataLength = dictionaryFile.readInt();
             entry = new Entry(dataPtr, dataLength);
         } catch (IOException e) {
-            //EOF exception
+            System.out.println("debug");
             return null;
         }
         return entry;
@@ -253,7 +254,8 @@ public class PersistentHashedIndex implements Index {
                 i++;
                 //1. write the PostingsList into data file and return the length
                 //System.out.println("1.1");
-                String dataString = entry.getKey() + " " + entry.getValue().toString();
+                //String dataString = entry.getKey() + " " + entry.getValue().toString();
+                String dataString = entry.getValue().toString();
                 //System.out.println(dataString);
                 //System.out.println("2");
                 int dataLength = writeData(dataString, free);
@@ -271,7 +273,7 @@ public class PersistentHashedIndex implements Index {
                 if (currEntry == null){
                     //5.1 write the free ptr and data length into dictionary file
                     //System.out.println(entry.getKey());
-                    //System.out.println("1 new entry:" + i + "Key :"+ entry.getKey());
+                    System.out.println("1 new entry:" + i + "Key :"+ entry.getKey());
                     writeEntry(termEntry, entryPtr);
                 }else if(currEntry.ptr == 0L || currEntry.length == 0){
                     //5.2 no entry at here
@@ -283,7 +285,7 @@ public class PersistentHashedIndex implements Index {
                     boolean flag = true;
                     //5.3 loop until null and write the free ptr and data length into dictionary file
                     while (flag){
-                        //System.out.println("3 new entry:" + i + "Key :"+ entry.getKey());
+                        System.out.println("3 new entry:" + i + "Key :"+ entry.getKey());
                         //update collisions
                         collisions++;
                         //update entryPtr
@@ -313,13 +315,11 @@ public class PersistentHashedIndex implements Index {
         int raw_value = token.hashCode();
         if (raw_value < 0){
             raw_value = (~raw_value+1);
-            long entryPtr = (raw_value % TABLESIZE) * ENTRYSIZE;
             //make it positive
-            return entryPtr;
+            return (raw_value % TABLESIZE) * ENTRYSIZE;
         }else{
             //return directly if raw_value is already positive
-            long entryPtr = (raw_value % TABLESIZE) * ENTRYSIZE;
-            return entryPtr;
+            return (raw_value % TABLESIZE) * ENTRYSIZE;
         }
     }
 
@@ -329,7 +329,7 @@ public class PersistentHashedIndex implements Index {
 
     /**
      *  Returns the postings for a specific term, or null
-     *  if the term is not in the index.
+     *  if the term is not in the dictionary.
      */
     public PostingsList getPostings( String token ) {
         //
@@ -338,16 +338,18 @@ public class PersistentHashedIndex implements Index {
         //fetch dictionary entry
         long entryPtr = getEntryPtr(token);
         Entry currEntry = readEntry(entryPtr);
-        //System.out.println("test.ptr: " + currEntry.ptr);
-        //System.out.println("test.length: " + currEntry.length);
+//        System.out.println("test.ptr: " + currEntry.ptr);
+//        System.out.println("test.length: " + currEntry.length);
         if (currEntry.length == 0)
             return null;
         //fetch data
         String dataString = readData(currEntry.ptr, currEntry.length);
         PostingsList curPostinsList = convertPostings(dataString);
+        //if the match, directly return
         if (Objects.equals(curPostinsList.term, token)){
             return curPostinsList;
         }else{
+            //if not match, try to fetch the next entry in the dictionary
             int count = 0;
             while ( count < 1000 ){
                 //update entryPtr
@@ -357,7 +359,7 @@ public class PersistentHashedIndex implements Index {
                 if (currEntry.length == 0)
                     return null;
                 dataString = readData(currEntry.ptr, currEntry.length);
-                System.out.println("dataString: " + dataString);
+                //System.out.println("dataString: " + dataString);
                 curPostinsList = convertPostings(dataString);
                 if (Objects.equals(curPostinsList.term, token)){
                     return curPostinsList;
@@ -406,7 +408,7 @@ public class PersistentHashedIndex implements Index {
         //
         if(!index.containsKey(token)){
             //new PostingList
-            PostingsList newPostingList = new PostingsList();
+            PostingsList newPostingList = new PostingsList(token);
             //add new PostingEntry into this PostingsList
             newPostingList.addEntry(docID, offset);
             //update the hashmap
@@ -434,6 +436,28 @@ public class PersistentHashedIndex implements Index {
         System.err.println( index.keySet().size() + " unique words" );
         System.err.println( "Writing index to disk..." );
         writeIndex();
-        System.err.println( "done!" );
+        try {
+            dictionaryFile.close();
+            dataFile.close();
+            dictionaryFile = new RandomAccessFile( INDEXDIR + "/" + DICTIONARY_FNAME, "rw" );
+            dataFile = new RandomAccessFile( INDEXDIR + "/" + DATA_FNAME, "rw" );
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+//        calculateIDFofTerms();
     }
+
+
+//    public void calculateIDFofTerms(){
+//        for (Map.Entry<String,PostingsList> entry : index.entrySet()){
+//            System.out.println("term: " + entry.getKey());
+//            System.out.println("df: " + entry.getValue().size());
+//            int count = 0;
+//            for (PostingsEntry postingsEntry : entry.getValue().list){
+//                count += postingsEntry.positions.size();
+//            }
+//            System.out.println("tf: " + count);
+//            System.out.println("idf: " + Math.log((double)Index.docLengths.size()/(double)entry.getValue().size()));
+//        }
+//    }
 }

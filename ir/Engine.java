@@ -17,8 +17,8 @@ public class Engine {
 
     /** The inverted index. */
     //Index index = new HashedIndex();
-    //Index index = new PersistentHashedIndex();
-    Index index = new PersistentScalableHashedIndex();
+    Index index = new PersistentHashedIndex();
+    //Index index = new PersistentScalableHashedIndex();
 
     /** The indexer creating the search index. */
     Indexer indexer;
@@ -48,7 +48,10 @@ public class Engine {
     String pic_file = "";
 
     /** The file containing the pageranks. */
-    String rank_file = "";
+    String rank_file = "./rank/pageRankDavis";
+
+    /** The file containing the euclidean distance. */
+    String euclidean_file = "./rank/euclideanDavis";
 
     /** For persistent indexes, we might not need to do any indexing. */
     boolean is_indexing = true;
@@ -63,8 +66,7 @@ public class Engine {
      */
     public Engine( String[] args ) {
         decodeArgs( args );
-        indexer = new Indexer( index, kgIndex, patterns_file );
-        searcher = new Searcher( index, kgIndex );
+        indexer = new Indexer( index, kgIndex, patterns_file, euclidean_file);
         gui = new SearchGUI( this );
         gui.init();
         /* 
@@ -85,10 +87,13 @@ public class Engine {
                 gui.displayInfoText( String.format( "Indexing done in %.1f seconds.", elapsedTime/1000.0 ));
                 //final cleanup!
                 index.cleanup();
+                indexer.cleanupHashMap();
             }
         } else {
             gui.displayInfoText( "Index is loaded from disk" );
         }
+
+        searcher = new Searcher( index, kgIndex, rank_file, euclidean_file);
     }
 
 

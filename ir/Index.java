@@ -20,8 +20,14 @@ public interface Index {
     /** The key is the docID. */
     public HashMap<Integer,String> docNames = new HashMap<Integer,String>();
     
-    /** Mapping from document identifier to document length. */
+    /** Mapping from document identifier to document length. (This is also a Manhattan length)*/
     public HashMap<Integer,Integer> docLengths = new HashMap<Integer,Integer>();
+
+    /** The map from docName to page rank. */
+    public HashMap<String,Double> docNamePageRank = new HashMap<String,Double>();
+
+    /** The map from docName to euclidean length. */
+    public HashMap<Integer, Double> docEuclidean = new HashMap<Integer,Double>();
 
     /** Inserts a token into the index. */
     public void insert( String token, int docID, int offset );

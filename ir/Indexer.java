@@ -29,15 +29,30 @@ public class Indexer {
     /** The patterns matching non-standard words (e-mail addresses, etc.) */
     String patterns_file;
 
+    /** The path for euclidean file */
+    String euclidean_file;
+
+    /** The hashmap for calculating euclidean distance */
+    public HashMap<Integer, HashMap<String, Integer>> termCountInDocMap;
+
+    /** Count the df */
+    public HashMap<String, Integer> dfMap;
+
+    /** Count the term appears in a doc */
+    public HashMap<String, Boolean> termInDocMap;
 
     /* ----------------------------------------------- */
 
 
     /** Constructor */
-    public Indexer( Index index, KGramIndex kgIndex, String patterns_file ) {
+    public Indexer(Index index, KGramIndex kgIndex, String patterns_file, String euclidean_file) {
         this.index = index;
         this.kgIndex = kgIndex;
         this.patterns_file = patterns_file;
+        this.euclidean_file = euclidean_file;
+        this.termCountInDocMap = new HashMap<Integer, HashMap<String, Integer>>();
+        this.dfMap = new HashMap<String, Integer>();
+        this.termInDocMap = new HashMap<String, Boolean>();
     }
 
 
@@ -75,9 +90,13 @@ public class Indexer {
                         while ( tok.hasMoreTokens() ) {
                             String token = tok.nextToken();
                             insertIntoIndex( docID, token, offset++ );
+                            updateTFHashMap(docID, token);
+                            updateTermInDocMap(token);
                         }
+                        updateDfMap();
                         index.docNames.put( docID, f.getPath() );
                         index.docLengths.put( docID, offset );
+
                         reader.close();
                     } catch ( IOException e ) {
                         System.err.println( "Warning: IOException during indexing." );
@@ -86,7 +105,6 @@ public class Indexer {
             }
         }
     }
-
 
     /* ----------------------------------------------- */
 
@@ -98,6 +116,89 @@ public class Indexer {
         index.insert( token, docID, offset );
         if (kgIndex != null)
             kgIndex.insert(token);
+    }
+
+    /**
+     * the term frequency in different doc
+     */
+    public void updateTFHashMap(int docID, String token){
+        //a new doc
+        if (termCountInDocMap.get(docID) == null){
+            HashMap<String, Integer> newMap = new HashMap<>();
+            newMap.put(token, 1);
+            termCountInDocMap.put(docID,newMap);
+        }else{
+            //old doc new word
+            if(termCountInDocMap.get(docID).get(token) != null){
+                //old doc old word
+                int count = termCountInDocMap.get(docID).get(token) + 1;
+                termCountInDocMap.get(docID).put(token,count);
+            }else{
+                //old doc new word
+                termCountInDocMap.get(docID).put(token,1);
+            }
+        }
+    }
+
+    /**
+     * the term appears in one doc
+     */
+    public void updateTermInDocMap(String token) {
+        termInDocMap.put(token,true);
+    }
+
+    public void updateDfMap(){
+        for (String term : termInDocMap.keySet()){
+            if (dfMap.get(term) == null){
+                dfMap.put(term,1);
+            }else {
+                int count = dfMap.get(term) + 1;
+                dfMap.put(term,count);
+            }
+        }
+        //clean for next iteration
+        termInDocMap.clear();
+    }
+
+
+
+    /**
+     * calculating Euclidean distance and make it persistence then clean up hash map for next iteration
+     */
+    public void cleanupHashMap() {
+        System.out.println("Calculate the euclidean distance....");
+        int N = index.docLengths.size();
+        //loop each doc
+        for (Map.Entry<Integer, HashMap<String, Integer>> docEntry : termCountInDocMap.entrySet()){
+            double sum = 0.0;
+            if (docEntry.getKey() % 1000 == 0){
+                System.out.println("calculate docID" + docEntry.getKey());
+            }
+            //loop each term in the doc
+            for (Map.Entry<String, Integer> termEntry : docEntry.getValue().entrySet()){
+                System.out.println("cleanupHashMap_term: " + termEntry.getKey());
+//                if (dfMap.get(termEntry.getKey()) == 0){
+//                    continue;
+//                }
+                int df_t = dfMap.get(termEntry.getKey());
+                double idf_t = Math.log((double)N/(double)df_t);
+                sum += Math.pow(termEntry.getValue() * idf_t,2);
+            }
+            double euclideanLength = Math.sqrt(sum);
+            String data = docEntry.getKey() + ":" + euclideanLength;
+            //persistence
+            try{
+                RandomAccessFile file = new RandomAccessFile(euclidean_file, "rw");
+                //put at the last place
+                file.seek(file.length());
+                file.write(data.getBytes());
+                file.write("\n".getBytes());
+                file.close();
+            }catch( Exception e){
+                System.out.println("write euclidean distance wrong!");
+            }
+        }
+        System.out.println("Save euclidean distance ok....");
     }
 }
 

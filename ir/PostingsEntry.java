@@ -56,6 +56,12 @@ public class PostingsEntry implements Comparable<PostingsEntry>, Serializable {
         this.docID = docID;
     }
 
+    public PostingsEntry(int docID, ArrayList<Integer> positions ){
+
+        this.docID = docID;
+        this.positions = positions;
+    }
+
     public ArrayList<Integer> getPosition(){
 
         return this.positions;
@@ -76,26 +82,27 @@ public class PostingsEntry implements Comparable<PostingsEntry>, Serializable {
         return thisSet;
     }
 
-    public void merge(PostingsEntry entry) {
+    public void mergePosition(PostingsEntry entry) {
         if(this.docID == entry.docID) {
-            for(int i=0;i<entry.positions.size();++i) {
+            for(int i=0; i<entry.positions.size(); i++) {
+                //loop the positions in this entry and insert
                 this.insertPosition(entry.positions.get(i));
             }
         }
     }
-
+    //binary to keep order
     private void insertPosition(int position) {
         int start = 0;
         int end = this.positions.size() - 1;
-        int i;
-        while(end >= start){
-            i = (start + end)/2;
-            if(this.positions.get(i) == position) {
+        int mid;
+        while(start <= end){
+            mid = (end - start) / 2 + start;
+            if(this.positions.get(mid) == position) {
                 return;
-            } else if(position > this.positions.get(i)) {
-                start = i+1;
+            } else if(position > this.positions.get(mid)) {
+                start = mid+1;
             } else {
-                end = i-1;
+                end = mid-1;
             }
         }
         this.positions.add(start,position);

@@ -26,6 +26,7 @@ public class Query {
     class QueryTerm {
         String term;
         double weight;
+
         /**This is a constructor **/
         QueryTerm( String t, double w ) {
             term = t;

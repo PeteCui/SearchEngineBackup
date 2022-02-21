@@ -9,10 +9,17 @@ public class PersistentScalableHashedIndex extends PersistentHashedIndex {
 
 
     /** The directory where the intermediate index files are stored. */
-    public static final String INTER_INDEXDIR = "./inter_index";
+//    public static final String INTER_INDEXDIR = "./inter_index";
+    public static final String INTER_INDEXDIR = "./index";
+
+    /** The directory where the persistent index files are stored. */
+    public static final String INDEXDIR = "./index";
+
+    /** The dictionary file name */
+    public static final String DICTIONARY_FNAME = "dictionary";
 
     /** The dictionary hash table on disk can fit this many entries. */
-//    public static final long TABLESIZE = 3500000L;
+    //public static final long TABLESIZE = 3500000L;
     public static final long TABLESIZE = 611953L;
 
     /** redeclare following parameter for modifying easily **/
@@ -29,9 +36,11 @@ public class PersistentScalableHashedIndex extends PersistentHashedIndex {
     /** Pointer to the first free memory cell in the data file. */
     long free = 0L;
 
-    /** TABLESIZE/3/5(5~6 intermediate files) = 200000L */
-//    public static final long SPECIFICTPOINT = 200000L;
+    /** (5~6 intermediate files) */
+    //best for DavisWiki
     public static final long SPECIFICTPOINT = 1500000L;
+    //best for guardian
+    //public static final long SPECIFICTPOINT = 10000000L;
 
     /** Inserted Token count */
     long count = 0L;
@@ -48,6 +57,32 @@ public class PersistentScalableHashedIndex extends PersistentHashedIndex {
     /** This background thread responsible for checking the number of intermediate file */
     Background back;
 
+    /**
+     *   A helper class representing one entry in the dictionary hashtable.
+     */
+    public class Entry {
+        //
+        //  YOUR CODE HERE
+        //
+        //start position in the data file
+        long ptr;
+        //the length of the data should be fetched
+        int length;
+
+        String term = null;
+
+        public Entry(long ptr, int length, String term){
+            this.ptr = ptr;
+            this.length = length;
+            this.term = term;
+        }
+
+        public Entry(long ptr, int length){
+            this.ptr = ptr;
+            this.length = length;
+        }
+    }
+
 
     /**
      *  Constructor. Opens the dictionary file and the data file.
@@ -56,12 +91,6 @@ public class PersistentScalableHashedIndex extends PersistentHashedIndex {
     public PersistentScalableHashedIndex(){
         //the first round (0 round)
         //the file in INDEXDIR will also create, because the super() automatically call
-        try{
-            dictionaryFile = new RandomAccessFile( INTER_INDEXDIR + "/" + DICTIONARY_FNAME + round, "rw" );
-            dataFile = new RandomAccessFile( INTER_INDEXDIR + "/" + DATA_FNAME + round, "rw" );
-        } catch ( IOException e ) {
-            e.printStackTrace();
-        }
         //init file queue
         fileQueue = new LinkedList<>();
         //start the backend thread to check if at least two intermediate files
@@ -78,7 +107,7 @@ public class PersistentScalableHashedIndex extends PersistentHashedIndex {
 
         if(!index.containsKey(token)){
             //new PostingList
-            PostingsList newPostingList = new PostingsList();
+            PostingsList newPostingList = new PostingsList(token);
             //add new PostingEntry into this PostingsList
             newPostingList.addEntry(docID, offset);
             //update the hashmap
@@ -121,6 +150,13 @@ public class PersistentScalableHashedIndex extends PersistentHashedIndex {
      * 8. recreate the random-access files dictionaryFile and dataFile
      */
     public void periodicCleanup(){
+        try{
+            dictionaryFile = new RandomAccessFile( INTER_INDEXDIR + "/" + DICTIONARY_FNAME + round, "rw" );
+            dataFile = new RandomAccessFile( INTER_INDEXDIR + "/" + DATA_FNAME + round, "rw" );
+        } catch ( IOException e ) {
+            e.printStackTrace();
+        }
+
         System.err.println( index.keySet().size() + " unique words" );
         System.err.println( "Writing index to disk..." );
         writeIndex();
@@ -178,8 +214,6 @@ public class PersistentScalableHashedIndex extends PersistentHashedIndex {
         System.out.println("queue size " + fileQueue.size());
         back.callStop();
         System.err.println( "Writing clean up merge to disk..." );
-        /** add!!!!the last merge!*/
-
 
 
 
@@ -210,7 +244,8 @@ public class PersistentScalableHashedIndex extends PersistentHashedIndex {
                 i++;
                 //1. write the PostingsList into data file and return the length
                 //System.out.println("1.1");
-                String dataString = entry.getKey() + " " + entry.getValue().toString();
+                //String dataString = entry.getKey() + " " + entry.getValue().toString();
+                String dataString = entry.getValue().toString();
                 //System.out.println(dataString);
                 //System.out.println("2");
                 int dataLength = writeData(dataFile, dataString, free);
@@ -288,7 +323,7 @@ public class PersistentScalableHashedIndex extends PersistentHashedIndex {
             return new String(data);
         }
         catch ( IOException e ) {
-            e.printStackTrace();
+            //e.printStackTrace();
             return null;
         }
     }
@@ -340,6 +375,8 @@ public class PersistentScalableHashedIndex extends PersistentHashedIndex {
             //int 4 byte long 8 byte
             long dataPtr = file.readLong();
             int dataLength = file.readInt();
+            System.out.println("readEntry dataPtr:" + dataPtr);
+            System.out.println("readEntry datalength:" + dataLength);
             entry = new Entry(dataPtr, dataLength);
         } catch (IOException e) {
             //EOF exception
@@ -371,25 +408,41 @@ public class PersistentScalableHashedIndex extends PersistentHashedIndex {
             RandomAccessFile newData = new RandomAccessFile(INTER_INDEXDIR + "/" + DATA_FNAME + suffix1 + suffix2, "rw");
 
             //fetch Index from two different dictionary file and data file
-            HashMap<String, PostingsList> map1 = readIndex(dic1, data1);
-            HashMap<String, PostingsList> map2 = readIndex(dic2, data2);
-            System.out.println(suffix1 + " size " + map1.size());
-            System.out.println(suffix2 + " size " + map2.size());
+//            HashMap<String, PostingsList> map1 = readIndex(dic1, data1);
+//            HashMap<String, PostingsList> map2 = readIndex(dic2, data2);
+            HashMap<String, Entry> map1 = readDic(dic1, data1);
+            HashMap<String, Entry> map2 = readDic(dic2, data2);
+            //System.out.println(suffix1 + " size " + map1.size());
+            //System.out.println(suffix2 + " size " + map2.size());
 
             //write index
             long ptr = 0;
-            for (Map.Entry<String, PostingsList> entry : map1.entrySet()){
-                PostingsList list1 = entry.getValue();
+            System.out.println("merging...");
+            for (Map.Entry<String, Entry> entry : map1.entrySet()){
+                //System.out.println(readData(data1, entry.getValue().ptr, entry.getValue().length).toString());
+                System.out.println("1.1");
+                PostingsList list1 = convertPostings(readData(data1, entry.getValue().ptr, entry.getValue().length).toString());
                 if (map2.containsKey(entry.getKey())){
-                    PostingsList list2 = map2.get(entry.getKey());
+                    System.out.println("1.2");
+                    System.out.println(readData(data2, map2.get(entry.getKey()).ptr, map2.get(entry.getKey()).length).toString());
+                    PostingsList list2 = convertPostings(readData(data2, map2.get(entry.getKey()).ptr, map2.get(entry.getKey()).length));
                     //speed up
-                    if (list1.size() >= list2.size()){
+                    if (list1.list.size() >= list2.list.size()){
 //                        System.out.println("merge size " + list1.size());
 //                        for (PostingsEntry postingsEntry : list2.list){
 //                            list1.list.add(postingsEntry);
 //                        }
                         //System.out.println("size merge" + list1.size());
-                        list1.sortMerge(list2);
+//                        System.out.println("1.3");
+                        System.out.println("list1");
+                        System.out.println(list1.term);
+                        System.out.println(list1.toString());
+                        System.out.println("list2");
+                        System.out.println(list2.term);
+                        System.out.println(list2.toString());
+
+                        list1.mergeList(list2);
+                        System.out.println("sorrtMerge: " + list1.toString());
                         int dataLength = writeMergedEntry(newDic, newData, entry.getKey(),list1,ptr);
 
                         ptr += dataLength;
@@ -399,7 +452,8 @@ public class PersistentScalableHashedIndex extends PersistentHashedIndex {
 //                        for (PostingsEntry postingsEntry : list1.list){
 //                            list2.list.add(postingsEntry);
 //                        }
-                        list2.sortMerge(list1);
+//                        System.out.println("1.3");
+                        list2.mergeList(list1);
                         int dataLength = writeMergedEntry(newDic, newData, entry.getKey(),list2,ptr);
 
                         ptr += dataLength;
@@ -410,11 +464,11 @@ public class PersistentScalableHashedIndex extends PersistentHashedIndex {
                 }
             }
 
-            for(Map.Entry<String, PostingsList> entry : map2.entrySet()) {
-                PostingsList list2 = entry.getValue();
+            for(Map.Entry<String, Entry> entry : map2.entrySet()) {
+                PostingsList list2 = convertPostings(readData(data2, entry.getValue().ptr, entry.getValue().length));
                 ptr += writeMergedEntry(newDic, newData, entry.getKey(),list2,ptr);
             }
-
+            System.out.println("merging end...");
             dic1.close();
             dic2.close();
             data1.close();
@@ -490,32 +544,81 @@ public class PersistentScalableHashedIndex extends PersistentHashedIndex {
         }
     }
 
-    /**
-     *  Reads dictionary from the dictionary file
-     */
-    private HashMap<String, PostingsList> readIndex(RandomAccessFile dictionaryFile, RandomAccessFile dataFile) {
+//    private HashMap<String, PostingsList> readIndex(RandomAccessFile dictionaryFile, RandomAccessFile dataFile) {
+//        long ptr = 0;
+//        HashMap<String, PostingsList> dicMap = new HashMap<>();
+//        while(true){
+//            Entry currEntry = readEntry(dictionaryFile,ptr);
+////            System.out.println("length" + currEntry.length);
+////            System.out.println("ptr" + currEntry.ptr);
+//            if (currEntry.length == -1)
+//                break;
+//            if(currEntry.length != 0){
+//                String dataString = readData(dataFile, currEntry.ptr, currEntry.length);
+//                PostingsList curPostinsList = convertPostings(dataString);
+//                //System.out.println("term:"+ curPostinsList.term);
+//                dicMap.put(curPostinsList.term, curPostinsList);
+//            }
+//            ptr += ENTRYSIZE;
+//        }
+//        try {
+//            dictionaryFile.close();
+//            dataFile.close();
+//        } catch (IOException e) {
+//            //e.printStackTrace();
+//        }
+//        return dicMap;
+//    }
+
+    private HashMap<String, Entry> readDic(RandomAccessFile dictionaryFile, RandomAccessFile dataFile) {
         long ptr = 0;
-        HashMap<String, PostingsList> dicMap = new HashMap<>();
+        HashMap<String, Entry> dicMap = new HashMap<>();
         while(true){
-            Entry currEntry = readEntry(dictionaryFile,ptr);
-//            System.out.println("length" + currEntry.length);
-//            System.out.println("ptr" + currEntry.ptr);
+            Entry currEntry = readEntry(dictionaryFile, ptr);
+            System.out.println("length" + currEntry.length);
+            System.out.println("ptr" + currEntry.ptr);
             if (currEntry.length == -1)
                 break;
             if(currEntry.length != 0){
                 String dataString = readData(dataFile, currEntry.ptr, currEntry.length);
                 PostingsList curPostinsList = convertPostings(dataString);
                 //System.out.println("term:"+ curPostinsList.term);
-                dicMap.put(curPostinsList.term, curPostinsList);
+                //dicMap.put(curPostinsList.term, curPostinsList);
+                dicMap.put(curPostinsList.term, new Entry(currEntry.ptr, currEntry.length, curPostinsList.term));
             }
             ptr += ENTRYSIZE;
         }
         try {
             dictionaryFile.close();
-            dataFile.close();
         } catch (IOException e) {
             //e.printStackTrace();
         }
         return dicMap;
+    }
+
+    public void renameFile() {
+        synchronized (fileQueue){
+            String suffix = fileQueue.poll();
+            try {
+                super.dictionaryFile.close();
+                super.dataFile.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            removeFile( INTER_INDEXDIR + "/" + DICTIONARY_FNAME);
+            removeFile( INTER_INDEXDIR + "/" + DATA_FNAME);
+            renameFile( INTER_INDEXDIR + "/" + DICTIONARY_FNAME + suffix , INTER_INDEXDIR + "/" + DICTIONARY_FNAME);
+            renameFile( INTER_INDEXDIR + "/" + DATA_FNAME + suffix , INTER_INDEXDIR + "/" + DATA_FNAME);
+        }
+    }
+
+    private void renameFile(String path, String newPath) {
+        try {
+            File file = new File(path);
+            File file2 = new File(newPath);
+            file.renameTo(file2);
+        } catch(Exception e) {
+            e.printStackTrace();
+        }
     }
 }

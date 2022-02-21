@@ -10,6 +10,7 @@ package ir;
 
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Map;
 
 
 /**
@@ -32,7 +33,7 @@ public class HashedIndex implements Index {
         //if the hashmap doesn't contain the token
         if(!index.containsKey(token)){
             //new PostingList
-            PostingsList newPostingList = new PostingsList();
+            PostingsList newPostingList = new PostingsList(token);
             //add new PostingEntry into this PostingsList
             newPostingList.addEntry(docID, offset);
             //update the hashmap
@@ -74,4 +75,5 @@ public class HashedIndex implements Index {
      */
     public void cleanup() {
     }
+
 }

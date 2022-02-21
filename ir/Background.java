@@ -38,7 +38,7 @@ public class Background extends Thread{
 
     @Override
     public void run() {
-        System.out.println("Background thread is running");
+        System.out.println("Background thread is running!!!");
         while(indexing){
             synchronized (fileQueue) {
                 //System.out.println("queue size" + fileQueue.size());
@@ -75,8 +75,10 @@ public class Background extends Thread{
             }
         }
         executorService.shutdown();
+        index.renameFile();
         System.out.println("backend thread terminate");
     }
+
 
     public void callStop(){
         indexing = false;
