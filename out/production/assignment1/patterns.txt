@@ -36,7 +36,8 @@
 //the_largest_corporations_in_america.xlsx
 //4.2
 //4.5.3.5. Excluding those ending with . 
-[\w]+(\.\w+)+
+[0-9]+(\.[0-9]+)+
+[\w]+\.(xlsx|ppt|doc)
 
 //24/7/4/7
 [0-9]+(\/[0-9]+)+

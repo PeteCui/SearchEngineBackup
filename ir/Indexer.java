@@ -94,6 +94,7 @@ public class Indexer {
                             updateTermInDocMap(token);
                         }
                         updateDfMap();
+                        //put the path not the real file name into the hash map
                         index.docNames.put( docID, f.getPath() );
                         index.docLengths.put( docID, offset );
 
@@ -147,6 +148,9 @@ public class Indexer {
         termInDocMap.put(token,true);
     }
 
+    /**
+     * update the df, the value of corresponding key(term) ++
+     */
     public void updateDfMap(){
         for (String term : termInDocMap.keySet()){
             if (dfMap.get(term) == null){
