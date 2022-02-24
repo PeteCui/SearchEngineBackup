@@ -19,6 +19,7 @@ public interface Index {
     /** Mapping from document identifiers to document names. */
     /** The key is the docID. */
     public HashMap<Integer,String> docNames = new HashMap<Integer,String>();
+    public HashMap<String,Integer> docID = new HashMap<>();
     
     /** Mapping from document identifier to document length. (This is also a Manhattan length)*/
     public HashMap<Integer,Integer> docLengths = new HashMap<Integer,Integer>();

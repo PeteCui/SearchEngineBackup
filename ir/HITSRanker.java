@@ -71,6 +71,11 @@ public class HITSRanker {
     HashMap<Integer,Integer> idToOrder = new HashMap<Integer,Integer>();
     //read order -> nodeID in links file
     String[] orderToId = new String[MAX_NUMBER_OF_DOCS];
+
+    HashSet<Integer> baseSet;
+
+    //convert file name to path
+    String docPath = "dataset\\davisWiki\\";
     
     /* --------------------------------------------- */
 
@@ -112,7 +117,7 @@ public class HITSRanker {
      *
      * @return     The file name.
      */
-    private String getFileName( String path ) {
+    public String getFileName( String path ) {
         String result = "";
         StringTokenizer tok = new StringTokenizer( path, "\\/" );
         while ( tok.hasMoreTokens() ) {
@@ -214,7 +219,7 @@ public class HITSRanker {
     private void iterate(String[] titles) {
 
         //HashSet<Integer> rootSet = new HashSet<>();
-        HashSet<Integer> baseSet = new HashSet<>();
+        baseSet = new HashSet<>();
 
         //find the baseSet and update rootset
         for (String title : titles){
@@ -380,12 +385,13 @@ public class HITSRanker {
         for (PostingsEntry entry : post.list){
             titles[i] = getFileName( index.docNames.get(entry.docID) );
             docIDToTitles.put(entry.docID, titles[i]);
-            System.out.println(titles[i]);
+            System.out.println(titleToId.get(titles[i]));
             i++;
         }
         //calculate hubs and authorities
         iterate(titles);
 
+        //only return root set
 //        System.out.println(authorities.size());
 //        for (Map.Entry<Integer, Double> entry : authorities.entrySet()){
 //            System.out.println("a : " + entry.getKey() + " " + entry.getValue());
@@ -395,22 +401,38 @@ public class HITSRanker {
 //            System.out.println("h : " + entry.getKey() + " " + entry.getValue());
 //        }
         //combine them together
-        for (PostingsEntry entry : post.list){
-//            System.out.println("docId "  + entry.docID );
-//            System.out.println("title " + docIDToTitles.get(entry.docID));
-//            System.out.println("Id " + titleToId.get(docIDToTitles.get(entry.docID)));
-//            System.out.println("A" + authorities.get(titleToId.get(docIDToTitles.get(entry.docID))));
-            if( titleToId.get(docIDToTitles.get(entry.docID)) != null){
-                entry.score = authW * authorities.get(titleToId.get(docIDToTitles.get(entry.docID)));
-                entry.score += hubW * hubs.get(titleToId.get(docIDToTitles.get(entry.docID)));
-            }else
-                entry.score = 0.0;
+//        for (PostingsEntry entry : post.list){
+////            System.out.println("docId "  + entry.docID );
+////            System.out.println("title " + docIDToTitles.get(entry.docID));
+////            System.out.println("Id " + titleToId.get(docIDToTitles.get(entry.docID)));
+////            System.out.println("A" + authorities.get(titleToId.get(docIDToTitles.get(entry.docID))));
+//            if( titleToId.get(docIDToTitles.get(entry.docID)) != null){
+//                entry.score = authW * authorities.get(titleToId.get(docIDToTitles.get(entry.docID)));
+//                entry.score += hubW * hubs.get(titleToId.get(docIDToTitles.get(entry.docID)));
+//            }else
+//                entry.score = 0.0;
+//
+//        }
 
+        //return base set!
+        PostingsList resPostingList = new PostingsList();
+        for (int order : baseSet){
+            if (orderToId[order] != null){
+                System.out.println(orderToId[order]);
+                System.out.println("title " + IdToTiltle.get(Integer.valueOf(orderToId[order])));
+                System.out.println(docPath + IdToTiltle.get(Integer.valueOf(orderToId[order])));
+                System.out.println(index.docNames.get(23));
+                int docID = index.docID.get(docPath + IdToTiltle.get(Integer.valueOf(orderToId[order])));
+                PostingsEntry entry = new PostingsEntry(docID);
+                entry.score = authW * authorities.get(Integer.valueOf(orderToId[order]));
+                entry.score += hubW * hubs.get(Integer.valueOf(orderToId[order]));
+                resPostingList.addEntry(entry);
+            }
         }
 
-        Collections.sort(post.list);
+        Collections.sort(resPostingList.list);
 
-        return post;
+        return resPostingList;
     }
 
 

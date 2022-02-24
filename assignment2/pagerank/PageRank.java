@@ -14,6 +14,7 @@ public class PageRank {
 
     /**
      *   Mapping from document names to document numbers.
+	 *   (from id in the graph file to index order )
      */
     HashMap<String,Integer> docNumber = new HashMap<String,Integer>();
 
@@ -55,6 +56,7 @@ public class PageRank {
 
 	String fileName = "pageRankDavis";
 	String title_file_mapping = "davisTitles.txt";
+//	String title_file_mapping = "svwikiTitles.txt";
 
 	final static double STOP = 0.15;
 
@@ -86,26 +88,29 @@ public class PageRank {
 		int noOfDocs = readDocs( filename );
 		//begin to surf
 //		iterate( noOfDocs, 1000 );
+
+
 //		//MC_1
-//		MC_simulation_12(filename, noOfDocs,1,1,true);
-//		MC_simulation_12(filename,noOfDocs,2,1,true);
-//		MC_simulation_12(filename,noOfDocs,3,1,true);
-////		//MC_2
-//		MC_simulation_12(filename,noOfDocs,1,2,true);
-//		MC_simulation_12(filename,noOfDocs,2,2,true);
-//		MC_simulation_12(filename,noOfDocs,3,2,true);
-//		//MC_4
-//		MC_simulation_45(filename,noOfDocs,1,4,true);
-//		MC_simulation_45(filename,noOfDocs,2,4,true);
-//		MC_simulation_45(filename,noOfDocs,3,4,true);
-//		//MC_5
-//		MC_simulation_45(filename,noOfDocs,1,5,true);
-//		MC_simulation_45(filename,noOfDocs,2,5,true);
-//		MC_simulation_45(filename,noOfDocs,3,5,true);
+		MC_simulation_12(filename, noOfDocs,1,1,true);
+		MC_simulation_12(filename,noOfDocs,2,1,true);
+		MC_simulation_12(filename,noOfDocs,3,1,true);
+//		//MC_2
+		MC_simulation_12(filename,noOfDocs,1,2,true);
+		MC_simulation_12(filename,noOfDocs,2,2,true);
+		MC_simulation_12(filename,noOfDocs,3,2,true);
+		//MC_4
+		MC_simulation_45(filename,noOfDocs,1,4,true);
+		MC_simulation_45(filename,noOfDocs,2,4,true);
+		MC_simulation_45(filename,noOfDocs,3,4,true);
+		//MC_5
+		MC_simulation_45(filename,noOfDocs,1,5,true);
+		MC_simulation_45(filename,noOfDocs,2,5,true);
+		MC_simulation_45(filename,noOfDocs,3,5,true);
 
 //		calculateDifference(noOfDocs);
 
-//		MC_simulation_12(filename,noOfDocs,1,2,true);
+//		MC_simulation_12(filename,noOfDocs,1,1,true);
+//		MC_simulation_45(filename,noOfDocs,1,5,true);
     }
 
 
@@ -179,7 +184,7 @@ public class PageRank {
 
 	void iterate( int numberOfDocs, int maxIterations ){
 		
-		//calculate how many pages point to each page for reducing loop time
+		//create reverse links and sink page hash map
 		HashMap<Integer,HashMap<Integer,Boolean>> pagesToMe = new HashMap<Integer,HashMap<Integer,Boolean>>();
 		ArrayList<Integer> sinkPages = new ArrayList<>();
 		for(int i = 0; i < numberOfDocs; i++){
@@ -198,8 +203,9 @@ public class PageRank {
 				sinkPages.add(from);
 			}
         }
-		System.out.println(pagesToMe.size());
-		System.out.println(sinkPages.size());
+
+//		System.out.println(pagesToMe.size());
+//		System.out.println(sinkPages.size());
 
 		//System.out.println(pagesToMe.size());
 		double[] x = new double[numberOfDocs];
@@ -221,7 +227,7 @@ public class PageRank {
 			for(int i = 0; i < numberOfDocs; i++){
 				//the probability of jumping to page i from every page
 				x_new[i] = BORED / (double)numberOfDocs;
-				//the probability of jumping to page i from sink page
+				//the probability of jumping and surfing to page i from sink page
 				x_new[i] += sinkPagesToMeProbability;
 				HashMap<Integer,Boolean> toMeLinks = pagesToMe.get(i);
 				if(toMeLinks != null){
@@ -263,8 +269,8 @@ public class PageRank {
 		//sort
 		Collections.sort(rankList);
 		//write to disk
-		writePageRankWithDocName(N, rankList, fileName);
-		//writePageRankWithDocID(N, rankList, fileName);
+//		writePageRankWithDocName(N, rankList, fileName);
+		writePageRankWithDocID(N, rankList, fileName);
 		//print the top N
 		for(int i = 0; i <=N-1 ;i++){
 			System.out.println(rankList.get(i).title + " : " + rankList.get(i).rank);
@@ -366,7 +372,6 @@ public class PageRank {
 	}
 
 	public double[] MC_simulation_45(String filename, int noOfDocs, int time, int mode, boolean write){
-		int maximum = noOfDocs;
 		int N = noOfDocs * time;
 		double[] pageRank = new double[noOfDocs];
 		int totalNum = 0;
@@ -382,13 +387,13 @@ public class PageRank {
 			}
 			//the maximum jump
 			int count = 0;
-			while(generateProbability() > STOP || count > maximum){
+			while(generateProbability() > STOP || count > noOfDocs){
+				//update visit
+				pageRank[curPage] += 1.0;
+				totalNum++;
+
 				if (link.get(curPage) == null){
 					//sink page
-					curPage = generateRandomNumber(noOfDocs);
-					//update visit
-					pageRank[curPage] += 1.0;
-					totalNum++;
 					//stop and break this run
 					break;
 				}else{
@@ -400,9 +405,6 @@ public class PageRank {
 						//the corresponding page
 						if (j == index){
 							curPage = pageID;
-							//update visit
-							pageRank[curPage] += 1.0;
-							totalNum++;
 							//not break the run, just means find the next linked page
 							break;
 						}
@@ -462,10 +464,10 @@ public class PageRank {
 //			getSquaredDiff(top30Map,res2);
 //			getSquaredDiff(top30Map,res3);
 //			getSquaredDiff(top30Map,res4);
-//			System.out.println( "MC1 " + time + ":" + getSquaredDiff(top30Map,res1));
-//			System.out.println( "MC2 " + time + ":" + getSquaredDiff(top30Map,res2));
-//			System.out.println( "MC4 " + time + ":" + getSquaredDiff(top30Map,res3));
-//			System.out.println( "MC5 " + time + ":" + getSquaredDiff(top30Map,res4));
+			System.out.println( "MC1 " + time + ":" + getSquaredDiff(top30Map,res1));
+			System.out.println( "MC2 " + time + ":" + getSquaredDiff(top30Map,res2));
+			System.out.println( "MC4 " + time + ":" + getSquaredDiff(top30Map,res3));
+			System.out.println( "MC5 " + time + ":" + getSquaredDiff(top30Map,res4));
 
 			try {
 				RandomAccessFile file = new RandomAccessFile("./2.7data/diffData", "rw");
@@ -478,11 +480,11 @@ public class PageRank {
 				byte[] data2 = out2.getBytes();
 				file.write(data2);
 				file.write("\n".getBytes());
-				String out3 = "MC3 " + time + ":" + String.format("%.9g%n", getSquaredDiff(top30Map, res3));
+				String out3 = "MC4 " + time + ":" + String.format("%.9g%n", getSquaredDiff(top30Map, res3));
 				byte[] data3 = out3.getBytes();
 				file.write(data3);
 				file.write("\n".getBytes());
-				String out4 = "MC4 " + time + ":" + String.format("%.9g%n", getSquaredDiff(top30Map, res4));
+				String out4 = "MC5 " + time + ":" + String.format("%.9g%n", getSquaredDiff(top30Map, res4));
 				byte[] data4 = out4.getBytes();
 				file.write(data4);
 				file.write("\n".getBytes());

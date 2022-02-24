@@ -41,6 +41,8 @@ public class Indexer {
     /** Count the term appears in a doc */
     public HashMap<String, Boolean> termInDocMap;
 
+    public HITSRanker hitsRanker;
+
     /* ----------------------------------------------- */
 
 
@@ -142,7 +144,7 @@ public class Indexer {
     }
 
     /**
-     * the term appears in one doc
+     * the term frequency in one doc
      */
     public void updateTermInDocMap(String token) {
         termInDocMap.put(token,true);
@@ -204,5 +206,6 @@ public class Indexer {
         }
         System.out.println("Save euclidean distance ok....");
     }
+
 }
 

@@ -93,7 +93,7 @@ public class Engine {
             gui.displayInfoText( "Index is loaded from disk" );
         }
 
-        searcher = new Searcher( index, kgIndex, rank_file, euclidean_file);
+        searcher = new Searcher(index, kgIndex, rank_file, euclidean_file);
     }
 
 

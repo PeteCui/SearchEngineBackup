@@ -230,6 +230,7 @@ public class PersistentHashedIndex implements Index {
                 String[] data = line.split(";");
                 docNames.put(Integer.valueOf(data[0]), data[1] );
                 docLengths.put(Integer.valueOf(data[0]), Integer.valueOf(data[2]));
+                docID.put(data[1],Integer.valueOf(data[0]));
             }
         }
         freader.close();
