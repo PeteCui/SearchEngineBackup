@@ -421,7 +421,6 @@ public class HITSRanker {
                 System.out.println(orderToId[order]);
                 System.out.println("title " + IdToTiltle.get(Integer.valueOf(orderToId[order])));
                 System.out.println(docPath + IdToTiltle.get(Integer.valueOf(orderToId[order])));
-                System.out.println(index.docNames.get(23));
                 int docID = index.docID.get(docPath + IdToTiltle.get(Integer.valueOf(orderToId[order])));
                 PostingsEntry entry = new PostingsEntry(docID);
                 entry.score = authW * authorities.get(Integer.valueOf(orderToId[order]));

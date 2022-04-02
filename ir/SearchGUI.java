@@ -161,6 +161,7 @@ public class SearchGUI extends JFrame {
                 displayInfoText( " " );
                 // Turn the search string into a Query
                 String queryString = queryWindow.getText().toLowerCase().trim();
+                System.out.println(queryString);
                 query = new Query( queryString );
                 // Take relevance feedback from the user into account (assignment 3)
                 // Check which documents the user has marked as relevant.
@@ -170,6 +171,7 @@ public class SearchGUI extends JFrame {
                         if ( box[i] != null )
                             relevant[i] = box[i].isSelected();
                     }
+                    //update the query
                     query.relevanceFeedback( results, relevant, engine );
                 }
                 // Search and print results. Access to the index is synchronized since

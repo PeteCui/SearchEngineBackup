@@ -7,9 +7,7 @@
 
 package ir;
 
-import java.util.ArrayList;
-import java.util.StringTokenizer;
-import java.util.Iterator;
+import java.util.*;
 import java.nio.charset.*;
 import java.io.*;
 
@@ -116,6 +114,60 @@ public class Query {
         //
         //  YOUR CODE HERE
         //
+        //count the original query
+        HashMap<String,Double> vector = new HashMap<>();
+        for (QueryTerm queryTerm : queryterm){
+            if (!vector.containsKey(queryTerm.term)){
+                vector.put(queryTerm.term, queryTerm.weight * alpha);
+            }else{
+                double previousValue = vector.get(queryTerm.term);
+                previousValue += previousValue;
+                vector.put(queryTerm.term, previousValue);
+            }
+        }
+
+        //handle the relevant file
+        int statisticsLen = docIsRelevant.length;
+        int relevantCount = 0;
+        for (int i= 0; i < statisticsLen; i++) {
+            //if this result has been selected
+            if (docIsRelevant[i]) {
+                relevantCount++;
+                //get the file name
+                String file = engine.index.docNames.get(results.get(i).docID);
+                System.out.println(file);
+                //for 3.2
+                if (file.equals("dataset\\davisWiki\\Math.f")){
+                    file = "dataset\\davisWiki\\Mathematics.f";
+                }
+                System.out.println(file);
+                //if (file.equals("./assignment2/pagerank/davisTitles.txt"+"Math.f"))
+                try {
+                    //read this file
+                    Reader reader = new InputStreamReader(new FileInputStream(file), StandardCharsets.UTF_8);
+                    //tokenize this file
+                    Tokenizer tok = new Tokenizer(reader, true, false, true, engine.patterns_file);
+                    while (tok.hasMoreTokens()) {
+                        String token = tok.nextToken();
+                        if (!vector.containsKey(token)) {
+                            vector.put(token, (1.0/relevantCount) * beta);
+                        } else {
+                            double previousValue = vector.get(token);
+                            vector.put(token, previousValue + (1.0/relevantCount) * beta);
+                        }
+                    }
+                } catch (IOException e) {
+                    System.err.println(e);
+                }
+            }
+        }
+
+        queryterm = new ArrayList<QueryTerm>();
+        for (HashMap.Entry<String, Double> entry : vector.entrySet()) {
+            QueryTerm query = new QueryTerm(entry.getKey(), entry.getValue());
+            queryterm.add(query);
+        }
+
     }
 }
 

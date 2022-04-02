@@ -50,11 +50,17 @@ public class KGramIndex {
     /**
      *  Get intersection of two postings lists
      */
-    private List<KGramPostingsEntry> intersect(List<KGramPostingsEntry> p1, List<KGramPostingsEntry> p2) {
+    public List<KGramPostingsEntry> intersect(List<KGramPostingsEntry> p1, List<KGramPostingsEntry> p2) {
         // 
         // YOUR CODE HERE
         //
-        return null;
+        List<KGramPostingsEntry> res = new ArrayList<>();
+        for (KGramPostingsEntry entry2 : p2){
+            if(p1.contains(entry2)){
+                res.add(entry2);
+            }
+        }
+        return res;
     }
 
 
@@ -63,6 +69,35 @@ public class KGramIndex {
         //
         // YOUR CODE HERE
         //
+        if (!term2id.containsKey(token)){
+            //generate term id
+            int termID = generateTermID();
+            //update id2term hashMap
+            id2term.put(termID,token);
+            //update term2id hashMap
+            term2id.put(token,termID);
+            //instance KGramPostingsEntry;
+            KGramPostingsEntry kGramPostingsEntry = new KGramPostingsEntry(termID);
+
+            String tokenPlus = '^'+token+'$';
+
+            for(int i = 0; i < token.length() + 3 - K; i++){
+                //get slice
+                String kgram = tokenPlus.substring(i, i+K);
+                //System.out.println(kgram);
+                if (index.containsKey(kgram)){
+                    if (index.get(kgram).contains(kGramPostingsEntry)){
+                        continue;
+                    }else{
+                        index.get(kgram).add(kGramPostingsEntry);
+                    }
+                }else{
+                    List<KGramPostingsEntry> newList = new ArrayList<>();
+                    newList.add(kGramPostingsEntry);
+                    index.put(kgram,newList);
+                }
+            }
+        }
     }
 
     /** Get postings for the given k-gram */
@@ -70,7 +105,8 @@ public class KGramIndex {
         //
         // YOUR CODE HERE
         //
-        return null;
+
+        return index.get(kgram);
     }
 
     /** Get id of a term */
@@ -120,7 +156,6 @@ public class KGramIndex {
 
         int k = Integer.parseInt(args.getOrDefault("k", "3"));
         KGramIndex kgIndex = new KGramIndex(k);
-
         File f = new File(args.get("file"));
         Reader reader = new InputStreamReader( new FileInputStream(f), StandardCharsets.UTF_8 );
         Tokenizer tok = new Tokenizer( reader, true, false, true, args.get("patterns_file") );
@@ -136,7 +171,6 @@ public class KGramIndex {
                 System.err.println("Cannot search k-gram index: " + kgram.length() + "-gram provided instead of " + k + "-gram");
                 System.exit(1);
             }
-
             if (postings == null) {
                 postings = kgIndex.getPostings(kgram);
             } else {

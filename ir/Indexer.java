@@ -92,14 +92,13 @@ public class Indexer {
                         while ( tok.hasMoreTokens() ) {
                             String token = tok.nextToken();
                             insertIntoIndex( docID, token, offset++ );
-                            updateTFHashMap(docID, token);
-                            updateTermInDocMap(token);
+                            //updateTFHashMap(docID, token);
+                            //updateTermInDocMap(token);
                         }
-                        updateDfMap();
+                        //updateDfMap();
                         //put the path not the real file name into the hash map
                         index.docNames.put( docID, f.getPath() );
                         index.docLengths.put( docID, offset );
-
                         reader.close();
                     } catch ( IOException e ) {
                         System.err.println( "Warning: IOException during indexing." );

@@ -17,6 +17,9 @@ public class PostingsList {
     /** Used for return specific term postingsList, if this is a mixed postingList no need to set it */
     public String term;
 
+    /** Used for return the weight of specific term postingsList, if this is a mixed postingList no need to set it */
+    public double weight;
+
     /** Number of postings in this list. */
     public int size() {
 
@@ -105,9 +108,11 @@ public class PostingsList {
 
     public void calculateTD_IDF(NormalizationType normType, Index index) {
         //N
+        //the number of all documents
         int N = index.docLengths.size();
         //System.out.println("N: " + N);
         //df_t
+        //the number of documents which contain term1/term/2...(at least one term in the query)
         int df_t;
         df_t = list.size();
         //System.out.println("df_t: " + df_t);
@@ -121,8 +126,9 @@ public class PostingsList {
             }else{
                 lenDoc = index.docEuclidean.get(entry.docID);
             }
-            entry.score =  (tf * idf_t)/lenDoc;
-            //System.out.println(entry.docID + " : " + entry.score);
+            //System.out.println(weight);
+            entry.score = weight * (tf * idf_t) / lenDoc;
+//            System.out.println(entry.docID + " : " + entry.score);
         }
     }
 

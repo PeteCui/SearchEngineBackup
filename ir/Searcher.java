@@ -262,6 +262,8 @@ public class Searcher {
             String term = query.queryterm.get(0).term;
             //fetch the corresponding postingsList
             PostingsList resPostingsList = index.getPostings(term);
+            //put the weight of this query term into its result postingsList
+            resPostingsList.weight = query.queryterm.get(0).weight;
             if (resPostingsList == null) {
                 return null;
             }
@@ -297,7 +299,10 @@ public class Searcher {
             //loop all the term in the query
             int i = 0;
             for (String term : termSet) {
+                //System.out.println("term: "+ term);
                 allList[i] = index.getPostings(term);
+                //put the weight of this query term into its result postingsList
+                allList[i].weight = query.queryterm.get(i).weight;
                 i++;
             }
             //if totally a null list return null
@@ -305,6 +310,7 @@ public class Searcher {
             if (noNullList == null) {
                 return null;
             }
+            //System.out.println(noNullList.length);
             //score the postingsList
             for (PostingsList list : noNullList) {
                 if (rankingType == RankingType.TF_IDF) {

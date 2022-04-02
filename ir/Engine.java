@@ -9,6 +9,7 @@ package ir;
 
 import java.util.ArrayList;
 import java.io.File;
+import java.util.List;
 
 /**
  *  This is the main class for the search engine.
@@ -16,15 +17,15 @@ import java.io.File;
 public class Engine {
 
     /** The inverted index. */
-    //Index index = new HashedIndex();
-    Index index = new PersistentHashedIndex();
+    Index index = new HashedIndex();
+    //Index index = new PersistentHashedIndex();
     //Index index = new PersistentScalableHashedIndex();
 
     /** The indexer creating the search index. */
     Indexer indexer;
 
     /** K-gram index */
-    KGramIndex kgIndex;
+    KGramIndex kgIndex = new KGramIndex(2);
 
     /** The searcher used to search the index. */
     Searcher searcher;
@@ -87,7 +88,12 @@ public class Engine {
                 gui.displayInfoText( String.format( "Indexing done in %.1f seconds.", elapsedTime/1000.0 ));
                 //final cleanup!
                 index.cleanup();
-                indexer.cleanupHashMap();
+                //result for 3.3
+                System.out.println("the result of ve: " + kgIndex.getPostings("ve").size());
+                List<KGramPostingsEntry> postings = kgIndex.getPostings("th");
+                postings = kgIndex.intersect(postings, kgIndex.getPostings("he"));
+                System.out.println("the result of th he: " + postings.size());
+                //indexer.cleanupHashMap();
             }
         } else {
             gui.displayInfoText( "Index is loaded from disk" );

@@ -74,6 +74,7 @@ public class HashedIndex implements Index {
      *  No need for cleanup in a HashedIndex.
      */
     public void cleanup() {
+
     }
 
 }

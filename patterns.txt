@@ -15,7 +15,7 @@
 // ADD YOUR PATTERNS HERE
 
 //internet address
-(https?:\/\/)[0-9a-zA-Z\.\/\?\%\?\+\=\:\#\_\,\-\@\~\!\&]+
+(https?:\/\/)[0-9a-zA-Z\.\/\?\%\?\+\=\:\#\_\,\-\@\~\!\&\']+
 
 //'gift'
 //"gift"
